@@ -11,15 +11,20 @@ class Recipe(models.Model):
     def __str__(self):
         return self.title
     
-
+class Unit(models.Model):
+    name = models.CharField(max_length=50)\
+    
+    def __str__(self):
+        return self.name
+    
 class RecipeIngredient(models.Model):
     recipe_id = models.ForeignKey(Recipe, related_name='ingredients', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     quantity = models.FloatField()
-    unit_id = models.ForeignKey('unit', related_name='ingredients', on_delete=models.CASCADE)
+    unit_id = models.ForeignKey(Unit, related_name='ingredients', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.quantity} {self.unit} of {self.name}"
+        return f"{self.quantity} {self.unit_id} of {self.name}"
 
 class RecipeStep(models.Model):
     recipe_id = models.ForeignKey(Recipe, related_name='steps', on_delete=models.CASCADE)
@@ -28,11 +33,6 @@ class RecipeStep(models.Model):
 
     def __str__(self):
         return f"Step {self.step_number}: {self.instruction}"
-    
-class Unit(models.Model):
-    name = models.CharField(max_length=50)
-    def __str__(self):
-        return self.name
 
 class User(models.Model):
     username = models.CharField(max_length=150, unique=True)

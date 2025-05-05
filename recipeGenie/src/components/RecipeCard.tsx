@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, FlatList, ScrollView, KeyboardAvoidingView,TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Float } from 'react-native/Libraries/Types/CodegenTypes';
 import Autocomplete from 'react-native-autocomplete-input';
@@ -24,74 +24,81 @@ type Ingredient = {
     { id: '11', title: 'pt' },
   ];
 
-export default function RecipeCard() {
+
+export default function RecipeCard({recipe}: {recipe: any}) {
   
-  const [recipeName, setRecipeName] = useState('ie. Pumpkin Pie'); // Explicitly type the recipe name
-  const [ingredients, setIngredients] = useState<Ingredient[]>([]); // Explicitly type the ingredients array
-  const [steps, setSteps] = useState<string[]>([]); // Explicitly type the steps array
-  const [ingredientInput, setIngredientInput] = useState<Ingredient>({ quantity: 0, uom: '', name: '' });
-  const [stepInput, setStepInput] = useState('');
-  const [filteredUoM, setFilteredUoM]  = useState(unitsOfMeasure);
+  const [recipeName, setRecipeName] = useState('') // Explicitly type the recipe name
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]) // Explicitly type the ingredients array
+  const [steps, setSteps] = useState<string[]>([]) // Explicitly type the steps array
+  const [ingredientInput, setIngredientInput] = useState<Ingredient>({ quantity: 0, uom: '', name: '' })
+  const [stepInput, setStepInput] = useState('')
+  const [filteredUoM, setFilteredUoM]  = useState(unitsOfMeasure)
   const [hideUoMList, setHideUoMList] = useState(true); // Toggle UoM dropdown visibility
-  const [recipe_table, setRecipes] = useState<any[]>([]);
-  const [ingredients_table, setRecipes] = useState<any[]>([]);
-  const [recipe_ingredients_table, setRecipes] = useState<any[]>([]);
+  console.log('RecipeCard', {recipe})
+  // const [recipes, setRecipes] = useState([])
+  // const [ingredients_table, setRecipes] = useState<any[]>([])
+  // const [recipe_ingredients_table, setRecipes] = useState<any[]>([])
 
+  useEffect(() => {
+    // Fetch the recipes from the database when the component mounts
+    console.log({recipe})
+    getRecipes(recipe)
+  }
+  , []) // Empty dependency array to run only once on mount  
 
-
-
-
-  // const [filteredUoM, setFilteredUoM] = useState(unitsOfMeasure); // Filtered UoM options
-  // const [showUoMList, setShowUoMList] = useState(false); // Toggle UoM dropdown visibility
-
+  const getRecipes = ({recipe}: {recipe: any}) => {  
+    // setRecipeName(recipe.name)
+    // setIngredients(data.ingredients) // Set the ingredients from the data prop
+    // setSteps(data.steps) // Set the steps from the data prop
+  }
 
   const scrollViewRef = useRef<ScrollView>(null); // Ref for the ScrollView
 
   const scrollToSection = (yPosition: number) => {
     if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({ y: yPosition, animated: true });
+      scrollViewRef.current.scrollTo({ y: yPosition, animated: true })
     }
-  };
+  }
   const addIngredient = () => {
     if (ingredientInput.quantity && ingredientInput.uom && ingredientInput.name) {
-      setIngredients([...ingredients, ingredientInput]);
-      setIngredientInput({ quantity: 0, uom: '', name: '' });
+      setIngredients([...ingredients, ingredientInput])
+      setIngredientInput({ quantity: 0, uom: '', name: '' })
     }
-  };
+  }
   const addStep = () => {
     if (stepInput) {
-      setSteps([...steps, stepInput]);
-      setStepInput('');
+      setSteps([...steps, stepInput])
+      setStepInput('')
     }
-  };
+  }
 
   const handleUoMChange = (text: string) => {
-    setIngredientInput({ ...ingredientInput, uom: text });
-    setFilteredUoM(unitsOfMeasure.filter((uom) => uom.title.toLowerCase().includes(text.toLowerCase())));
-    setHideUoMList(false);
-  };
+    setIngredientInput({ ...ingredientInput, uom: text })
+    setFilteredUoM(unitsOfMeasure.filter((uom) => uom.title.toLowerCase().includes(text.toLowerCase())))
+    setHideUoMList(false)
+  }
 
   const selectUoM = (uom: string) => {
-    setIngredientInput({ ...ingredientInput, uom });
-    setHideUoMList(true);
-  };
+    setIngredientInput({ ...ingredientInput, uom })
+    setHideUoMList(true)
+    console.log(recipes)
+  }
+  
 
   const saveRecipe = () => {
     if (!recipeName.trim() || ingredients.length === 0 || steps.length === 0) {
-      console.log('Please complete the recipe before saving.');
-      return;
+      console.log('Please complete the recipe before saving.')
+      return
     }
     const newRecipe = {
       name: recipeName,
       recipe_id: Math.random().toString(36).substring(2, 15), // Generate a random recipe ID
       steps,
-    };
-    setRecipes([...recipes, newRecipe]); 
-    console.log('Recipe saved:', newRecipe);
-    setRecipeName(''); // Clear the recipe name input
-    setIngredients([]); // Clear the ingredients array
-    setSteps([]); // Clear the steps array
-    console.log('Recipes:', recipes); // Log the saved recipes
+    }
+    console.log('Recipe saved:', newRecipe)
+    setRecipeName('') // Clear the recipe name input
+    setIngredients([]) // Clear the ingredients array
+    setSteps([]) // Clear the steps array
   }
     
   return (
@@ -104,7 +111,7 @@ export default function RecipeCard() {
               <TextInput
                 style={styles.input}
                 placeholder="Enter recipe name"
-                value={recipeName}
+                value={recipe.name}
                 onChangeText={setRecipeName}
                 onFocus={() => scrollToSection(200)}
               />
@@ -169,7 +176,7 @@ export default function RecipeCard() {
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
     
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -227,4 +234,4 @@ const styles = StyleSheet.create({
     borderWidth: 0.2,
     borderColor: 'gray',
   },
-});
+})
