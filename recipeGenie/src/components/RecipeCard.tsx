@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, FlatList, ScrollView, KeyboardAvoidingView,TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Float } from 'react-native/Libraries/Types/CodegenTypes';
 import Autocomplete from 'react-native-autocomplete-input';
+import { Recipe } from '../../App';
 
 
 type Ingredient = {
@@ -25,7 +26,7 @@ type Ingredient = {
   ];
 
 
-export default function RecipeCard({recipe}: {recipe: any}) {
+export default function RecipeCard({ recipe }: { recipe: Recipe }) {
   
   const [recipeName, setRecipeName] = useState('') // Explicitly type the recipe name
   const [ingredients, setIngredients] = useState<Ingredient[]>([]) // Explicitly type the ingredients array
@@ -46,8 +47,8 @@ export default function RecipeCard({recipe}: {recipe: any}) {
   }
   , []) // Empty dependency array to run only once on mount  
 
-  const getRecipes = ({recipe}: {recipe: any}) => {  
-    // setRecipeName(recipe.name)
+  const getRecipes = async (recipe: Recipe) => {  
+    setRecipeName(recipe.title)
     // setIngredients(data.ingredients) // Set the ingredients from the data prop
     // setSteps(data.steps) // Set the steps from the data prop
   }
@@ -81,7 +82,6 @@ export default function RecipeCard({recipe}: {recipe: any}) {
   const selectUoM = (uom: string) => {
     setIngredientInput({ ...ingredientInput, uom })
     setHideUoMList(true)
-    console.log(recipes)
   }
   
 
@@ -111,7 +111,7 @@ export default function RecipeCard({recipe}: {recipe: any}) {
               <TextInput
                 style={styles.input}
                 placeholder="Enter recipe name"
-                value={recipe.name}
+                value={recipeName}
                 onChangeText={setRecipeName}
                 onFocus={() => scrollToSection(200)}
               />

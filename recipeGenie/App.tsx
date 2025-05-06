@@ -3,8 +3,13 @@ import { StyleSheet, Text, View, FlatList } from 'react-native';
 import RecipeCard from './src/components/RecipeCard';
 import { useEffect, useState } from 'react';
 
+export type Recipe = {
+  id: string;
+  title: string;
+};
+
 export default function App() {
-  const [recipes, setRecipes] = useState<any[]>([]) // State to hold the recipes
+  const [recipes, setRecipes] = useState<Recipe[]>([]) // State to hold the recipes
   useEffect(() => {
     // Fetch the recipes from the database when the component mounts
     fetchRecipes();
