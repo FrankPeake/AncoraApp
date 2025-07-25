@@ -9,8 +9,7 @@ type InstructionListItemProps = {
 }
 
 export default function EditInstructionListItem({ instructionItem }: InstructionListItemProps) {
-    const [instruction, setInstruction] = useState<string>(instructionItem.instruction);
-    
+    const [instruction, setInstruction] = useState<string>(instructionItem.instruction); 
     return (
             <TouchableOpacity 
                 style={{ 
