@@ -26,3 +26,16 @@ export type UpdateRecipe = {
     prep_time: number;
     servings: number;
 };
+
+export type Ingredient = {
+    id: string;
+    recipe_id: string;
+    name: string;
+    quantity: number;
+    unit: string;
+};
+
+export type Instruction = {
+    step_number: number;
+    instruction: string;
+};

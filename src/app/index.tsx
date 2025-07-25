@@ -13,9 +13,7 @@ export default function HomeScreen() {
   })
   if (isLoading) {
     return <ActivityIndicator size={"large"} style={{marginTop: '20%'}}/>
-  } else {
-    console.log(data)
-  }
+  } 
   if (error) {
     return (
       <Text style={{ 

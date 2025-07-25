@@ -1,9 +1,11 @@
-import { InsertRecipe, Recipe } from '@/types/recipe_types';
+import { InsertRecipe } from '@/types/recipe_types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Pressable } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Pressable, FlatList, ScrollView } from 'react-native';
 import { createRecipe, deleteRecipe, getRecipeById, updateRecipe } from '@/services/recipe_service';
+import IngredientListItem from '@/components/ingredient_list_item';
+import EditInstructionListItem from '@/components/edit_instruction_list_item';
 
 export default function CreateUpdateRecipe() {
   const { id } = useLocalSearchParams<{id: string}>() // Get the recipe ID from the URL if it exists
@@ -119,6 +121,7 @@ export default function CreateUpdateRecipe() {
         ),
       }}
     />
+    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style ={styles.inputBox}>
         <TextInput
           multiline
@@ -127,26 +130,28 @@ export default function CreateUpdateRecipe() {
           onChangeText={setTitle}
         />
         <View style ={styles.divider} />
-        <TextInput
-          placeholder = "Prep Time (min)"
-          keyboardType="numeric"
-          value={prepTime.toString()}
-          onChangeText={(text) => {parseInt(text) ? setPrepTime(text) : setPrepTime('')}}
-        />
-        <View style ={styles.divider} />
-        <TextInput
-          placeholder = "Cook Time (min)"
-          keyboardType="numeric"
-          value={cookTime.toString()}
-          onChangeText={(text) => {parseInt(text) ? setCookTime(text) : setCookTime('')}}
-        />
-        <View style ={styles.divider} />
-        <TextInput
-          placeholder = "Servings"
-          keyboardType="numeric"
-          value={servings.toString()}
-          onChangeText={(text) => {parseInt(text) ? setServings(text) : setServings('')}}
-        />
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <TextInput
+            placeholder = "Prep Time (min)"
+            keyboardType="numeric"
+            value={prepTime.toString()}
+            onChangeText={(text) => {parseInt(text) ? setPrepTime(text) : setPrepTime('')}}
+          />
+          <View style ={styles.divider} />
+          <TextInput
+            placeholder = "Cook Time (min)"
+            keyboardType="numeric"
+            value={cookTime.toString()}
+            onChangeText={(text) => {parseInt(text) ? setCookTime(text) : setCookTime('')}}
+          />
+          <View style ={styles.divider} />
+          <TextInput
+            placeholder = "Servings"
+            keyboardType="numeric"
+            value={servings.toString()}
+            onChangeText={(text) => {parseInt(text) ? setServings(text) : setServings('')}}
+          />
+        </View>
         <View style ={styles.divider} />
         <TextInput
           multiline
@@ -155,6 +160,29 @@ export default function CreateUpdateRecipe() {
           onChangeText={setDescription}
         />
     </View>
+    <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Ingredients</Text>
+    {!!id &&
+    <View style ={styles.inputBox}>
+      <FlatList
+            data={data.ingredients}
+            renderItem={({ item }) =><IngredientListItem ingredientItem={item} />}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+        />
+    </View>
+    }
+    <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Instructions</Text>
+    {!!id &&
+    <View style ={styles.inputBox}>
+      <FlatList
+            data={data.instructions}
+            renderItem={({ item }) =><EditInstructionListItem instructionItem={item} />}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+        />
+    </View>
+    }
+    </ScrollView>
     {!!id &&
           <Pressable onPress={()=>delRecipe()} style={styles.inputBox}>
             <Text style={{ color: 'crimson', textAlign: 'center' }}>Delete</Text>

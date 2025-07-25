@@ -52,7 +52,6 @@ export async function deleteRecipe(id: string) {
   const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/recipes/${id}`, {
         method: 'DELETE',
     })
-    console.log(response)
     if (!response.ok) {
         throw new Error('Failed to delete recipe')
     }
