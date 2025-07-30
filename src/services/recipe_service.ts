@@ -57,3 +57,19 @@ export async function deleteRecipe(id: string) {
     }
     return
 }
+
+export async function getIngredients() {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/ingredients/`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch ingredients')
+  }
+  return response.json()
+}   
+
+export async function getUOMs() {
+  const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/uom/`)
+  if (!response.ok) {
+    throw new Error('Failed to fetch uoms')
+  }
+  return response.json()
+}   

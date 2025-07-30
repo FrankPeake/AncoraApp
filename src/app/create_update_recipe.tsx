@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Pressable, FlatList, ScrollView } from 'react-native';
-import { createRecipe, deleteRecipe, getRecipeById, updateRecipe } from '@/services/recipe_service';
+import { createRecipe, deleteRecipe, getIngredients, getRecipeById, getUOMs, updateRecipe } from '@/services/recipe_service';
 import IngredientListItem from '@/components/ingredient_list_item';
 import EditInstructionListItem from '@/components/edit_instruction_list_item';
 
@@ -74,6 +74,15 @@ export default function CreateUpdateRecipe() {
     queryFn: () => getRecipeById(id), 
     enabled: !!id, 
   })
+  const {data: ingArray, isLoading:ingLoading, error: ingError} = useQuery({
+      queryKey: ['ingredients'],
+      queryFn: () => getIngredients()
+  })
+  const {data: uomArray, isLoading:uomLoading, error: uomError} = useQuery({
+      queryKey: ['uoms'],
+      queryFn: () => getUOMs()
+  })
+
 
   useEffect(() => {
       if (data) {
@@ -121,7 +130,6 @@ export default function CreateUpdateRecipe() {
         ),
       }}
     />
-    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style ={styles.inputBox}>
         <TextInput
           multiline
@@ -165,7 +173,7 @@ export default function CreateUpdateRecipe() {
     <View style ={styles.inputBox}>
       <FlatList
             data={data.ingredients}
-            renderItem={({ item }) =><IngredientListItem ingredientItem={item} />}
+            renderItem={({ item }) =><IngredientListItem ingredientItem={item} ingredientArray={ingArray} uomArray={uomArray}/>}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
         />
@@ -182,7 +190,6 @@ export default function CreateUpdateRecipe() {
         />
     </View>
     }
-    </ScrollView>
     {!!id &&
           <Pressable onPress={()=>delRecipe()} style={styles.inputBox}>
             <Text style={{ color: 'crimson', textAlign: 'center' }}>Delete</Text>
