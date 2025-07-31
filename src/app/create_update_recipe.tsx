@@ -1,7 +1,7 @@
-import { InsertRecipe } from '@/types/recipe_types';
+import { Ingredients, InsertRecipe, Recipe, RecipeIngredient, RecipeInstruction, Units } from '@/types/recipe_types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, ActivityIndicator, Pressable, FlatList, ScrollView } from 'react-native';
 import { createRecipe, deleteRecipe, getIngredients, getRecipeById, getUOMs, updateRecipe } from '@/services/recipe_service';
 import IngredientListItem from '@/components/ingredient_list_item';
@@ -9,13 +9,35 @@ import EditInstructionListItem from '@/components/edit_instruction_list_item';
 
 export default function CreateUpdateRecipe() {
   const { id } = useLocalSearchParams<{id: string}>() // Get the recipe ID from the URL if it exists
+
   const [title, setTitle] = useState<string>('')
   const [description, setDescription] = useState<string>('')
   const [prepTime, setPrepTime] = useState<string>('')
   const [servings, setServings] = useState<string>('')
   const [cookTime, setCookTime] = useState<string>('')
 
+  const [ingredientsState, setIngredientsState] = useState<RecipeIngredient[]>([]);
+  const [instructionsState, setInstructionsState] = useState<RecipeInstruction[]>([]);
+
   const queryClient = useQueryClient()
+
+  // --- Fetching Data ---
+
+  const { data: recipeData, isLoading: isRecipeLoading, error: recipeError } = useQuery<Recipe, Error>({
+    queryKey: ['recipe', id],
+    queryFn: () => getRecipeById(id), 
+    enabled: !!id, 
+  })
+  const {data: ingredients, isLoading:ingLoading, error: ingError} = useQuery({
+      queryKey: ['ingredients'],
+      queryFn: () => getIngredients()
+  })
+  const {data: units, isLoading:uomLoading, error: uomError} = useQuery({
+      queryKey: ['uoms'],
+      queryFn: () => getUOMs()
+  })
+
+  // --- Mutations ---
 
   const { mutate: saveRecipe, isPending } = useMutation({
     mutationFn:  () => {
@@ -25,7 +47,9 @@ export default function CreateUpdateRecipe() {
         user_id: 1, // Assuming a static user_id for now
         prep_time: parseInt(prepTime),
         servings: parseInt(servings),
-        cook_time: parseInt(cookTime)
+        cook_time: parseInt(cookTime),
+        ingredients: ingredientsState,
+        instructions: instructionsState
       }
       return createRecipe(recipeData)
     },
@@ -45,7 +69,9 @@ export default function CreateUpdateRecipe() {
         description,
         prep_time: parseInt(prepTime),
         servings: parseInt(servings),
-        cook_time: parseInt(cookTime)
+        cook_time: parseInt(cookTime),
+        ingredients: ingredientsState,
+        instructions: instructionsState
       }
       return updateRecipe(id as string, newRecipe)
     },
@@ -69,47 +95,80 @@ export default function CreateUpdateRecipe() {
     }
   })
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['recipe', id],
-    queryFn: () => getRecipeById(id), 
-    enabled: !!id, 
-  })
-  const {data: ingArray, isLoading:ingLoading, error: ingError} = useQuery({
-      queryKey: ['ingredients'],
-      queryFn: () => getIngredients()
-  })
-  const {data: uomArray, isLoading:uomLoading, error: uomError} = useQuery({
-      queryKey: ['uoms'],
-      queryFn: () => getUOMs()
-  })
-
-
+  // --- Initialization/UseEffect ---
   useEffect(() => {
-      if (data) {
-        setTitle(data.title)
-        setDescription(data.description)
-        setPrepTime(data.prep_time.toString())
-        setServings(data.servings.toString())
-        setCookTime(data.cook_time.toString())
-      }
-    }, [data])
+      if (recipeData) {
+        setTitle(recipeData.title)
+        setDescription(recipeData.description)
+        setPrepTime(recipeData.prep_time.toString())
+        setServings(recipeData.servings.toString())
+        setCookTime(recipeData.cook_time.toString())
+        setIngredientsState([...(recipeData.ingredients ?? [{ id: `new-ing-0`, name: '', quantity: 0, unit: '', ingredient_id: '1', uom_id: '1' }])]);
+        setInstructionsState([...(recipeData.instructions ?? [{ step_number: 1, instruction: ''}])]);
+        }else if (!id) { // If it's a new recipe (no ID)
+          // Initialize with one empty ingredient/instruction for convenience
+          setIngredientsState([{ id: `new-ing-0`, name: '', quantity: 0, unit: '', ingredient_id: '1', uom_id: '1' }]);
+          setInstructionsState([{ step_number: 1, instruction: ''}]);
+        }
+    }, [recipeData, id])
 
-  if (isLoading) {
-    return <ActivityIndicator size={"large"} style={{marginTop: '20%'}}/>
-  } 
+// --- Handlers for UI events ---
 
-  if (error) {
+  const handleUpdateIngredient = useCallback((index: number, updatedFields: Partial<RecipeIngredient>) => {
+    setIngredientsState(prev => {
+      console.log("ing callback")
+      const newIngredients = [...prev];
+      newIngredients[index] = { ...newIngredients[index], ...updatedFields };
+      return newIngredients;
+    });
+  }, []);
+
+  const handleUpdateInstruction = useCallback((index: number, updatedFields: Partial<RecipeInstruction>) => {
+    setInstructionsState(prev => {
+      console.log("inst callback")
+      const newInstructions = [...prev];
+      newInstructions[index] = { ...newInstructions[index], ...updatedFields };
+      return newInstructions;
+    });
+  }, []);
+
+  const handleDeleteIngredient = useCallback((index: number) => {
+    setIngredientsState(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleDeleteInstruction = useCallback((index: number) => {
+    setInstructionsState(prev => prev.filter((_, i) => i !== index)); 
+  }, []);
+
+  // --- Error Handling ---
+
+ // Combine all loading states
+  const totalIsLoading = isRecipeLoading || ingLoading || uomLoading;
+  // Combine all error states
+  const totalError = recipeError || ingError || uomError;
+
+  if (totalIsLoading) {
+    return <ActivityIndicator size={"large"} style={{ marginTop: '20%' }} />;
+  }
+
+  if (totalError) {
     return (
-      <Text style={{ 
+      <Text style={{
         marginTop: '20%',
         fontWeight: 'bold',
         alignSelf: 'center'
       }}>
-        Error: {error.message}
+        Error: {totalError.message}
       </Text>
-    )
-  } 
+    );
+  }
 
+  // Ensure master lists are available (they should be due to loading checks above)
+  // If no ingredients/units are fetched, provide empty arrays to avoid errors
+  const availableIngredients = ingredients || [];
+  const availableUnits = units || [];
+  
+  // --- Save Logic ---
   const onSavePress = () => {
     if (id) {
       putRecipe()
@@ -118,7 +177,15 @@ export default function CreateUpdateRecipe() {
     }
   }
 
-  const isSaveButtonDisabled = () => isPending || !title || !description || !prepTime || !servings || !cookTime;  
+    const isSaveButtonDisabled = () =>
+    !title ||
+    !description ||
+    !prepTime ||
+    !servings ||
+    !cookTime ||
+    ingredientsState.some(ing => !ing.name || ing.quantity <= 0) || // Check if ingredients are valid
+    instructionsState.some(inst => !inst.instruction); // Check if instructions are valid
+  
   
   return (
     <>
@@ -130,6 +197,7 @@ export default function CreateUpdateRecipe() {
         ),
       }}
     />
+    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }} keyboardShouldPersistTaps="handled">
       <View style ={styles.inputBox}>
         <TextInput
           multiline
@@ -140,6 +208,7 @@ export default function CreateUpdateRecipe() {
         <View style ={styles.divider} />
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <TextInput
+            style={{ minWidth: "30%" }}
             placeholder = "Prep Time (min)"
             keyboardType="numeric"
             value={prepTime.toString()}
@@ -147,6 +216,7 @@ export default function CreateUpdateRecipe() {
           />
           <View style ={styles.divider} />
           <TextInput
+            style={{ minWidth: "30%" }}
             placeholder = "Cook Time (min)"
             keyboardType="numeric"
             value={cookTime.toString()}
@@ -154,6 +224,7 @@ export default function CreateUpdateRecipe() {
           />
           <View style ={styles.divider} />
           <TextInput
+            style={{ minWidth: "30%" }}
             placeholder = "Servings"
             keyboardType="numeric"
             value={servings.toString()}
@@ -169,32 +240,46 @@ export default function CreateUpdateRecipe() {
         />
     </View>
     <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Ingredients</Text>
-    {!!id &&
     <View style ={styles.inputBox}>
       <FlatList
-            data={data.ingredients}
-            renderItem={({ item }) =><IngredientListItem ingredientItem={item} ingredientArray={ingArray} uomArray={uomArray}/>}
+            data={ingredientsState ?? []}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item, index }) =>
+            <IngredientListItem 
+              ingredientItem={item}
+              index={index}
+              ingredients={availableIngredients} 
+              units={units}
+              onUpdate={handleUpdateIngredient}
+              onDelete={handleDeleteIngredient}
+            />}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps='handled'
         />
     </View>
-    }
     <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Instructions</Text>
-    {!!id &&
     <View style ={styles.inputBox}>
       <FlatList
-            data={data.instructions}
-            renderItem={({ item }) =><EditInstructionListItem instructionItem={item} />}
+            data={instructionsState ?? []}
+            keyExtractor={(item) => item.step_number.toString()}
+            renderItem={({ item, index }) =>
+            <EditInstructionListItem 
+              instructionItem={item} 
+              index={index}
+              onUpdate={handleUpdateInstruction} 
+              onDelete={handleDeleteInstruction} 
+            />}
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
         />
     </View>
-    }
     {!!id &&
           <Pressable onPress={()=>delRecipe()} style={styles.inputBox}>
             <Text style={{ color: 'crimson', textAlign: 'center' }}>Delete</Text>
           </Pressable>
     }
+    </ScrollView>
     </>
   )
 }

@@ -8,6 +8,8 @@ export type Recipe = {
     prep_time: number;
     servings: number;
     user_id: number;
+    ingredients?: RecipeIngredient[]; 
+    instructions?: RecipeInstruction[];
 };
 
 export type InsertRecipe = {
@@ -17,6 +19,8 @@ export type InsertRecipe = {
     prep_time: number;
     servings: number;
     user_id: number; // Assuming user_id is required for creating a recipe
+    ingredients?: RecipeIngredient[]; 
+    instructions?: RecipeInstruction[];
 };
 
 export type UpdateRecipe = {
@@ -25,17 +29,30 @@ export type UpdateRecipe = {
     cook_time: number;
     prep_time: number;
     servings: number;
+    ingredients?: RecipeIngredient[]; 
+    instructions?: RecipeInstruction[];
 };
 
-export type Ingredient = {
+export type RecipeIngredient = {
     id: string;
-    recipe_id: string;
+    ingredient_id: string;
     name: string;
     quantity: number;
     unit: string;
+    uom_id: string;
 };
 
-export type Instruction = {
+export type RecipeInstruction = {
     step_number: number;
     instruction: string;
+};
+
+export type Ingredients = {
+    id: string;
+    name: string;
+}
+
+export type Units = {
+    id: string;
+    name: string;
 };

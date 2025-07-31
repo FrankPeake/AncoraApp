@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Instruction } from "@/types/recipe_types";
+import { RecipeInstruction } from "@/types/recipe_types";
 import { Link } from "expo-router";
 
 type InstructionListItemProps = {
-    instructionItem: Instruction
+    index: number; // Optional index for editing
+    instructionItem: RecipeInstruction
+    onUpdate: (index: number, updatedFields: Partial<RecipeInstruction>) => void;
+    onDelete: (index: number) => void;
 }
 
-export default function EditInstructionListItem({ instructionItem }: InstructionListItemProps) {
+export default function EditInstructionListItem({ instructionItem, index }: InstructionListItemProps) {
     const [instruction, setInstruction] = useState<string>(instructionItem.instruction); 
     return (
             <TouchableOpacity 
@@ -23,10 +26,10 @@ export default function EditInstructionListItem({ instructionItem }: Instruction
                     paddingBottom: 10,
                 }}
             >
-                <View style={{ gap: 5 }}>
+                <View style={{ gap: 5, flexDirection: 'row', alignItems: 'center' }}>
                     <Text style={{fontSize: 12, fontWeight: "bold"}}>{instructionItem.step_number}</Text>
                     <TextInput 
-                        style={{fontSize: 12, color: "gray"}}
+                        style={{fontSize: 12, color: "dark gray"}}
                         multiline
                         placeholder = "Description"
                         value={instruction}

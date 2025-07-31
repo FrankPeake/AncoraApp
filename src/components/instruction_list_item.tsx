@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { AntDesign, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Instruction } from "@/types/recipe_types";
+import { RecipeInstruction } from "@/types/recipe_types";
 import { Link } from "expo-router";
 
 type InstructionListItemProps = {
-    instructionItem: Instruction
+    instructionItem: RecipeInstruction
 }
 
 export default function InstructionListItem({ instructionItem }: InstructionListItemProps) {
@@ -25,12 +25,11 @@ export default function InstructionListItem({ instructionItem }: InstructionList
                 }}
             >
                 {isCompleted
-                    ? <MaterialCommunityIcons name="circle-slice-8" size={22} color="#FF8C00" style={{ alignSelf: 'flex-start' }} />
-                    : <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={22} color="grey" style={{ alignSelf: 'flex-start' }} />
-                }
-                <View style={{ gap: 5 }}>
-                    <Text style={{fontSize: 12, fontWeight: "bold"}}>{instructionItem.step_number}</Text>
-                    <Text style={{fontSize: 12, color: "gray"}}>{instructionItem.instruction} min</Text>
+                        ? <MaterialCommunityIcons name="circle-slice-8" size={22} color="#FF8C00" style={{margin: 3 }} />
+                        : <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={22} color="grey" style={{margin: 3 }} />
+                    }
+                <View style={{ flex:1, gap: 5, flexDirection: 'row', alignItems: 'center' }}>
+                    <Text style={{fontSize: 12, color: "gray"}}>{instructionItem.step_number}. {instructionItem.instruction}</Text>
                 </View>
             </TouchableOpacity>
       )

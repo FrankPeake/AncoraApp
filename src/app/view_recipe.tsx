@@ -44,8 +44,6 @@ export default function ViewRecipe() {
     }, [data])
     if (isLoading) {
         return <ActivityIndicator size={"large"} style={{marginTop: '20%'}}/>
-    } else if (data) {
-        console.log(data)
     }
 
     if (error) {
@@ -68,28 +66,29 @@ export default function ViewRecipe() {
               <Text style={{ color: 'gray', fontSize: 16, fontWeight: '600' }} onPress={() => navigate(`/create_update_recipe/?id=${id}`)} >Edit</Text>
             ),
           }}
-        />
-          <View style ={styles.inputBox}>
-            <Text style={{fontSize:16}}>{title}</Text>
-            <Text style={{ color: 'gray', fontSize: 10 }}> Prep: {prepTime.toString()} min | Cooktime: {cookTime.toString()} min | Servings: {servings.toString()}</Text>
-            <Text>{description}</Text>
-            <Text style={{ color: 'dark gray', fontSize: 16 }}>Ingredients:</Text>
-            <FlatList
-                data={data.ingredients}
-                scrollEnabled={false}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <Text style={{fontSize:12, color: 'dark gray'}}>{item.name} - {item.quantity} {item.unit}</Text>}
-                showsVerticalScrollIndicator={false}
-            />
+      />
+        <View style ={styles.inputBox}>
+          <Text style={{fontSize:16}}>{title}</Text>
+          <Text style={{ color: 'gray', fontSize: 10 }}> Prep: {prepTime.toString()} min | Cooktime: {cookTime.toString()} min | Servings: {servings.toString()}</Text>
+          <Text>{description}</Text>
+          <Text style={{ color: 'dark gray', fontSize: 16 }}>Ingredients:</Text>
+          <FlatList
+              data={data.ingredients}
+              scrollEnabled={false}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => <Text style={{fontSize:12, color: 'dark gray'}}>{item.quantity} {item.unit} - {item.name}</Text>}
+              showsVerticalScrollIndicator={false}
+          />
         </View>
         <View style={styles.divider} />
-        <SafeAreaView style={{ flex: 1, alignItems: 'center' , marginHorizontal: 20 }}>
+        <View style={{ flex: 1, alignItems: 'center' , marginHorizontal: 20 }}>
             <FlatList
-                data={data.instructions}
-                renderItem={({ item }) => <InstructionListItem instructionItem={item} />}
-                showsVerticalScrollIndicator={false}
+              data={data.instructions}
+              keyExtractor={(item) => item.step_number}
+              renderItem={({ item }) => <InstructionListItem instructionItem={item} />}
+              showsVerticalScrollIndicator={false}
             />
-        </SafeAreaView>
+        </View>
         {!!id &&
               <Pressable onPress={()=>delRecipe()} style={styles.inputBox}>
                 <Text style={{ color: 'crimson', textAlign: 'center' }}>Delete</Text>
