@@ -51,7 +51,9 @@ export default function CreateUpdateRecipe() {
         ingredients: ingredientsState,
         instructions: instructionsState
       }
+      console.log("Recipe Data to be saved:", recipeData);
       return createRecipe(recipeData)
+      // return createRecipe(recipeData)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
@@ -103,11 +105,11 @@ export default function CreateUpdateRecipe() {
         setPrepTime(recipeData.prep_time.toString())
         setServings(recipeData.servings.toString())
         setCookTime(recipeData.cook_time.toString())
-        setIngredientsState([...(recipeData.ingredients ?? [{ id: `new-ing-0`, name: '', quantity: 0, unit: '', ingredient_id: '1', uom_id: '1' }])]);
+        setIngredientsState([...(recipeData.ingredients ?? [{ name: '', quantity: '0', unit: '', ingredient_id: 1, uom_id: 1 }])]);
         setInstructionsState([...(recipeData.instructions ?? [{ step_number: 1, instruction: ''}])]);
         }else if (!id) { // If it's a new recipe (no ID)
           // Initialize with one empty ingredient/instruction for convenience
-          setIngredientsState([{ id: `new-ing-0`, name: '', quantity: 0, unit: '', ingredient_id: '1', uom_id: '1' }]);
+          setIngredientsState([{  name: '', quantity: '0', unit: '', ingredient_id: 1, uom_id: 1 }]);
           setInstructionsState([{ step_number: 1, instruction: ''}]);
         }
     }, [recipeData, id])
@@ -116,7 +118,6 @@ export default function CreateUpdateRecipe() {
 
   const handleUpdateIngredient = useCallback((index: number, updatedFields: Partial<RecipeIngredient>) => {
     setIngredientsState(prev => {
-      console.log("ing callback")
       const newIngredients = [...prev];
       newIngredients[index] = { ...newIngredients[index], ...updatedFields };
       return newIngredients;
@@ -128,9 +129,19 @@ export default function CreateUpdateRecipe() {
       console.log("inst callback")
       const newInstructions = [...prev];
       newInstructions[index] = { ...newInstructions[index], ...updatedFields };
+      console.log("newInstructions", newInstructions)
       return newInstructions;
     });
   }, []);
+
+  const handleAddIngredient = useCallback(() => {
+    setIngredientsState(prev => [...prev, { ingredient_id: 1, uom_id: 1, name: '', quantity: '0', unit: '' }]);
+  }, []);
+
+  const handleAddInstruction = useCallback(() => {
+    setInstructionsState(prev => [...prev, {instruction: '', step_number: prev.length + 1 }]);
+  }, []);
+
 
   const handleDeleteIngredient = useCallback((index: number) => {
     setIngredientsState(prev => prev.filter((_, i) => i !== index));
@@ -182,11 +193,8 @@ export default function CreateUpdateRecipe() {
     !description ||
     !prepTime ||
     !servings ||
-    !cookTime ||
-    ingredientsState.some(ing => !ing.name || ing.quantity <= 0) || // Check if ingredients are valid
-    instructionsState.some(inst => !inst.instruction); // Check if instructions are valid
-  
-  
+    !cookTime
+
   return (
     <>
     <Stack.Screen
@@ -242,21 +250,24 @@ export default function CreateUpdateRecipe() {
     <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Ingredients</Text>
     <View style ={styles.inputBox}>
       <FlatList
-            data={ingredientsState ?? []}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item, index }) =>
-            <IngredientListItem 
-              ingredientItem={item}
-              index={index}
-              ingredients={availableIngredients} 
-              units={units}
-              onUpdate={handleUpdateIngredient}
-              onDelete={handleDeleteIngredient}
-            />}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps='handled'
-        />
+          data={ingredientsState ?? []}
+          keyExtractor={(item) => item.ingredient_id.toString()}
+          renderItem={({ item, index }) =>
+          <IngredientListItem 
+            ingredientItem={item}
+            index={index}
+            ingredients={availableIngredients} 
+            units={units}
+            onUpdate={handleUpdateIngredient}
+            onDelete={handleDeleteIngredient}
+          />}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps='handled'
+      />
+      <Pressable onPress={handleAddIngredient} style={styles.addButton}>
+          <Text style={styles.addButtonText}>Add Ingredient</Text>
+      </Pressable>
     </View>
     <Text style={{ color: 'dark gray', fontSize: 16, marginLeft: 15, marginTop: 10 }}>Instructions</Text>
     <View style ={styles.inputBox}>
@@ -273,6 +284,9 @@ export default function CreateUpdateRecipe() {
             scrollEnabled={false}
             showsVerticalScrollIndicator={false}
         />
+      <Pressable onPress={handleAddInstruction} style={styles.addButton}>
+        <Text style={styles.addButtonText}>Add Instruction</Text>
+      </Pressable>
     </View>
     {!!id &&
           <Pressable onPress={()=>delRecipe()} style={styles.inputBox}>
@@ -296,5 +310,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
     marginTop: 20,
     gap: 10,
+  },
+  addButton: {
+    padding: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: 'darkblue',
+    fontWeight: 'bold',
   },
 })

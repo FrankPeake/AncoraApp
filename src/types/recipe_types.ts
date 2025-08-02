@@ -34,12 +34,11 @@ export type UpdateRecipe = {
 };
 
 export type RecipeIngredient = {
-    id: string;
-    ingredient_id: string;
+    ingredient_id: number;
     name: string;
-    quantity: number;
+    quantity: string;
     unit: string;
-    uom_id: string;
+    uom_id: number;
 };
 
 export type RecipeInstruction = {

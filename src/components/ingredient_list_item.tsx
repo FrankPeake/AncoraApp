@@ -19,10 +19,7 @@ export default function IngredientListItem({ ingredientItem, index, ingredients,
     const [listType, setListType] = useState<string>('name')
     const [currentSearchSource, setCurrentSearchSource] = useState<Ingredients[]>(ingredients);
 
-
-
-    const recipeIngredientID = ingredientItem.id
-
+// -- Initialize state --
     useEffect(() => {
       console.log("Setlocal called")
       setLocalIngredientName(ingredientItem.name);
@@ -30,16 +27,46 @@ export default function IngredientListItem({ ingredientItem, index, ingredients,
       setLocalUnitName(ingredientItem.unit);
     }, [ingredientItem]); // Update local state when prop changes
 
-    useEffect(() => {
-      console.log("UE listype called")
-      // This runs whenever `listType` changes.
-      if (listType === 'name') {
-          setCurrentSearchSource(ingredients)
-        } else { // listType === 'uom'
-          setCurrentSearchSource(units)
-        }
-    }, [listType])
+// -- Handlers for UI interactions --
+    const handleSearchFocus = useCallback((input: 'name' | 'unit') => { // Typed input for clarity
+      // console.log("Focus Called"); // Good for debugging, remove in production
+      setListType(input);
+      setSearchSelected(true);
+      if (input === 'name') {
+        setCurrentSearchSource(ingredients);
+      } else { // input === 'unit'
+        setCurrentSearchSource(units);
+      }
+    }, [ingredients, units]);
 
+    const handleTextInputBlur = useCallback(() => {
+      setSearchSelected(false);
+      if (listType === 'name') {
+        onUpdate(index, { name: localIngredientName });
+      } else {
+        onUpdate(index, { unit: localUnitName });
+      }
+    }, []);
+
+    const handleOptionPress = (selectedItemName: string, selectedItemId: string) => {
+      console.log("HOP called")
+      const ingredientUpdate: Partial<RecipeIngredient> = {}
+      if (listType === 'name') {
+        ingredientUpdate.name = selectedItemName
+        ingredientUpdate.ingredient_id = parseInt(selectedItemId)
+        setLocalIngredientName(selectedItemName)
+      } else { // listType === 'unit'
+        ingredientUpdate.uom_id = parseInt(selectedItemId)
+        ingredientUpdate.unit = selectedItemName  
+        setLocalUnitName(selectedItemName)
+      }
+      ingredientUpdate.quantity = localQuantity
+      onUpdate(index, ingredientUpdate);
+      setSearchSelected(false)
+      Keyboard.dismiss(); // Dismiss the keyboard when an item is selected
+    }
+
+// -- Results Filtering --
     const filteredResults = useMemo(() => {
       console.log("filter called")
       const currentInput = listType === 'unit' ? localUnitName : localIngredientName;
@@ -48,48 +75,7 @@ export default function IngredientListItem({ ingredientItem, index, ingredients,
           return item.name.toLowerCase().includes(lowerCaseInput);
       });
       return newSearch
-    }, [localIngredientName, localUnitName])
-
-    const handleTextInputBlur = () => {
-        setTimeout(() => {
-            setSearchSelected(false);
-            if (listType === 'name') {
-              onUpdate(index, { name: localIngredientName });
-            } else {
-              onUpdate(index, { unit: localUnitName });
-            }
-        }, 100);
-    }
-
-    const handleOptionPress = (selectedItemName: string, selectedItemId: string, listType: string) => {
-      console.log("HOP called")
-      const ingredientUpdate: Partial<RecipeIngredient> = {}
-      ingredientUpdate.id = recipeIngredientID
-      if (listType === 'name') {
-        ingredientUpdate.name = selectedItemName
-        ingredientUpdate.ingredient_id = selectedItemId
-        setLocalIngredientName(selectedItemName)
-      } else { // listType === 'unit'
-        ingredientUpdate.uom_id = selectedItemId
-        ingredientUpdate.unit = selectedItemName  
-        setLocalUnitName(selectedItemName)
-      }
-      ingredientUpdate.quantity = parseFloat(localQuantity)
-      onUpdate(index, ingredientUpdate);
-      setSearchSelected(false)
-      Keyboard.dismiss(); // Dismiss the keyboard when an item is selected
-    }
-
-    const handleSearchFocus = (input: string) => {
-      console.log("Focus Called")
-      setListType(input)
-      setSearchSelected(true)
-        if (input === 'name') {
-        setCurrentSearchSource(ingredients);
-      } else { // input === 'uom'
-        setCurrentSearchSource(units);
-      }  
-    }
+    }, [localIngredientName, localUnitName, listType, currentSearchSource, searchSelected]);
 
     return (<>
               <View style={{
@@ -105,9 +91,6 @@ export default function IngredientListItem({ ingredientItem, index, ingredients,
                     value={localQuantity}
                     onChangeText={(text) => {
                       setLocalQuantity(text)
-                      if (text === '' || !isNaN(Number(text))) {
-                        onUpdate(index, { quantity: Number(text) || 0 })
-                      }
                     }}
                     keyboardType="numeric"
                   />
@@ -139,7 +122,7 @@ export default function IngredientListItem({ ingredientItem, index, ingredients,
                   maxToRenderPerBatch={5}
                   windowSize={5}
                   keyboardShouldPersistTaps="handled"
-                  renderItem={({ item }) => <Pressable onPress={() => handleOptionPress(item.name, item.id, listType)}><Text style={styles.searchOptions}>{item.name}</Text></Pressable>}
+                  renderItem={({ item }) => <Pressable onPress={() => handleOptionPress(item.name, item.id)}><Text style={styles.searchOptions}>{item.name}</Text></Pressable>}
                   removeClippedSubviews={true}
                 />
               </View>
@@ -165,8 +148,8 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   deleteButton: {
-    width: 30,
-    height: 30,
+    width: 20,
+    height: 20,
     borderRadius: 15,
     backgroundColor: 'crimson',
     justifyContent: 'center',
@@ -176,5 +159,6 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 10,
   },
 })
